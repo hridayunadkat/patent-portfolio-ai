@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/patent-portfolio-ai/static/css/main.3b53e33d.css",
+    "main.js": "/patent-portfolio-ai/static/js/main.6fac6fba.js",
+    "static/js/453.fb1a7834.chunk.js": "/patent-portfolio-ai/static/js/453.fb1a7834.chunk.js",
+    "index.html": "/patent-portfolio-ai/index.html",
+    "main.3b53e33d.css.map": "/patent-portfolio-ai/static/css/main.3b53e33d.css.map",
+    "main.6fac6fba.js.map": "/patent-portfolio-ai/static/js/main.6fac6fba.js.map",
+    "453.fb1a7834.chunk.js.map": "/patent-portfolio-ai/static/js/453.fb1a7834.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3b53e33d.css",
+    "static/js/main.6fac6fba.js"
+  ]
+}
