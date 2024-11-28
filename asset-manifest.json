@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/patent-portfolio-ai/static/css/main.3b53e33d.css",
-    "main.js": "/patent-portfolio-ai/static/js/main.8d1ee40d.js",
+    "main.css": "/patent-portfolio-ai/static/css/main.bf89cd3a.css",
+    "main.js": "/patent-portfolio-ai/static/js/main.04d20f2e.js",
     "static/js/453.fb1a7834.chunk.js": "/patent-portfolio-ai/static/js/453.fb1a7834.chunk.js",
     "index.html": "/patent-portfolio-ai/index.html",
-    "main.3b53e33d.css.map": "/patent-portfolio-ai/static/css/main.3b53e33d.css.map",
-    "main.8d1ee40d.js.map": "/patent-portfolio-ai/static/js/main.8d1ee40d.js.map",
+    "main.bf89cd3a.css.map": "/patent-portfolio-ai/static/css/main.bf89cd3a.css.map",
+    "main.04d20f2e.js.map": "/patent-portfolio-ai/static/js/main.04d20f2e.js.map",
     "453.fb1a7834.chunk.js.map": "/patent-portfolio-ai/static/js/453.fb1a7834.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3b53e33d.css",
-    "static/js/main.8d1ee40d.js"
+    "static/css/main.bf89cd3a.css",
+    "static/js/main.04d20f2e.js"
   ]
 }
