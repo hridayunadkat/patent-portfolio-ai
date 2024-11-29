@@ -24,7 +24,7 @@ const mockPatents = [
     title: 'Lightweight Composite Material for Spacecraft',
     company: 'AstroMaterials Ltd.',
     filingDate: '2023-04-05',
-    status: 'Active',
+    status: 'Inactive',
     relevanceScore: 75,
   },
 ];
@@ -130,6 +130,20 @@ const PatentPortfolioTool = () => {
       patent.relevanceScore >= filters.minRelevance
   );
 
+  // Function to get status color for bubble
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Active':
+        return 'bg-green-500';
+      case 'Pending':
+        return 'bg-yellow-500';
+      case 'Inactive':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl">
       <header className="flex items-center justify-between mb-6">
@@ -228,50 +242,54 @@ const PatentPortfolioTool = () => {
           <h3 className="font-semibold mb-2 flex items-center">
             <TrendingUp className="mr-2 text-blue-600" /> Relevance Filter
           </h3>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={filters.minRelevance}
-            onChange={(e) =>
-              setFilters({ ...filters, minRelevance: e.target.value })
-            }
-            className="w-full"
-          />
-          <div className="flex justify-between text-sm">
-            <span>0</span>
-            <span>100</span>
+          <div className="flex items-center">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={filters.minRelevance}
+              onChange={(e) =>
+                setFilters({ ...filters, minRelevance: parseInt(e.target.value) })
+              }
+              className="w-full"
+            />
+            <span className="ml-2">{filters.minRelevance}%</span>
           </div>
         </div>
       </div>
 
-      <div>
-        <h3 className="font-semibold text-xl mb-4">Patent List</h3>
-        <table className="min-w-full border-collapse table-auto">
-          <thead>
-            <tr>
-              <th className="border px-4 py-2">Patent ID</th>
-              <th className="border px-4 py-2">Title</th>
-              <th className="border px-4 py-2">Company</th>
-              <th className="border px-4 py-2">Filing Date</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Relevance</th>
+      <table className="min-w-full table-auto border-collapse">
+        <thead>
+          <tr>
+            <th className="px-4 py-2 text-left">Patent ID</th>
+            <th className="px-4 py-2 text-left">Title</th>
+            <th className="px-4 py-2 text-left">Company</th>
+            <th className="px-4 py-2 text-left">Filing Date</th>
+            <th className="px-4 py-2 text-left">Status</th>
+            <th className="px-4 py-2 text-left">Relevance Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredPatents.map((patent) => (
+            <tr key={patent.id}>
+              <td className="border px-4 py-2">{patent.id}</td>
+              <td className="border px-4 py-2">{patent.title}</td>
+              <td className="border px-4 py-2">{patent.company}</td>
+              <td className="border px-4 py-2">{patent.filingDate}</td>
+              <td className="border px-4 py-2">
+                <span
+                  className={`inline-block px-3 py-1 text-white rounded-full ${
+                    getStatusColor(patent.status)
+                  }`}
+                >
+                  {patent.status}
+                </span>
+              </td>
+              <td className="border px-4 py-2">{patent.relevanceScore}%</td>
             </tr>
-          </thead>
-          <tbody>
-            {filteredPatents.map((patent) => (
-              <tr key={patent.id}>
-                <td className="border px-4 py-2">{patent.id}</td>
-                <td className="border px-4 py-2">{patent.title}</td>
-                <td className="border px-4 py-2">{patent.company}</td>
-                <td className="border px-4 py-2">{patent.filingDate}</td>
-                <td className="border px-4 py-2">{patent.status}</td>
-                <td className="border px-4 py-2">{patent.relevanceScore}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
