@@ -229,14 +229,19 @@ const PatentPortfolioTool = () => {
             <TrendingUp className="mr-2 text-blue-600" /> Relevance Filter
           </h3>
           <input
-            type="number"
-            placeholder="Min Relevance"
-            className="w-full p-2 border rounded"
+            type="range"
+            min="0"
+            max="100"
             value={filters.minRelevance}
             onChange={(e) =>
               setFilters({ ...filters, minRelevance: e.target.value })
             }
+            className="w-full"
           />
+          <div className="flex justify-between text-sm">
+            <span>0</span>
+            <span>100</span>
+          </div>
         </div>
       </div>
 
