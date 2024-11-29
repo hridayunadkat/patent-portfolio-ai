@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, FileText, TrendingUp, Shield, List } from 'lucide-react';
+import { Search, Filter, FileText, TrendingUp, Shield, List, User } from 'lucide-react';
 
 // Mock data for aerospace patent search
 const mockPatents = [
@@ -30,15 +30,97 @@ const mockPatents = [
 ];
 
 const PatentPortfolioTool = () => {
+  const [users, setUsers] = useState([]); // Store user data
+  const [currentUser, setCurrentUser] = useState(null); // Track logged-in user
+  const [authForm, setAuthForm] = useState({ username: '', password: '' }); // Form inputs
+  const [isLoginMode, setIsLoginMode] = useState(true); // Switch between login/register modes
+  const [error, setError] = useState(''); // Display authentication errors
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     activeOnly: false,
     companyFilter: '',
     minRelevance: 0,
   });
-  const [selectedPatent, setSelectedPatent] = useState(null);
-  const [uploadedPatents, setUploadedPatents] = useState([]); // Store uploaded patents
-  const [showPatentLog, setShowPatentLog] = useState(false); // Control visibility of the Patent Log
+  const [uploadedPatents, setUploadedPatents] = useState([]); // Store uploaded patents in Patent Log
+  const [showPatentLog, setShowPatentLog] = useState(false);
+
+  const handleAuth = () => {
+    const { username, password } = authForm;
+
+    if (isLoginMode) {
+      // Login logic
+      const user = users.find((u) => u.username === username && u.password === password);
+      if (user) {
+        setCurrentUser(user);
+        setError('');
+      } else {
+        setError('Invalid username or password.');
+      }
+    } else {
+      // Register logic
+      if (users.find((u) => u.username === username)) {
+        setError('Username already exists.');
+      } else {
+        setUsers([...users, { username, password }]);
+        setError('');
+        setIsLoginMode(true); // Switch to login mode after registration
+      }
+    }
+  };
+
+  // Modified handleGeneratePatent to only add the patent to the Patent Log
+  const handleGeneratePatent = () => {
+    const newPatent = {
+      id: `U${uploadedPatents.length + 1}`,
+      title: `User Generated Patent ${uploadedPatents.length + 1}`,
+      company: currentUser.username,
+      filingDate: new Date().toISOString().split('T')[0],
+      status: 'Pending',
+      relevanceScore: Math.floor(Math.random() * 100),
+    };
+    setUploadedPatents([...uploadedPatents, newPatent]); // Add to Patent Log only
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl">
+        <h2 className="text-xl font-bold text-center mb-4">{isLoginMode ? 'Login' : 'Register'}</h2>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Username"
+            className="w-full p-2 border rounded"
+            value={authForm.username}
+            onChange={(e) => setAuthForm({ ...authForm, username: e.target.value })}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-2 border rounded"
+            value={authForm.password}
+            onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+          />
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          <button
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={handleAuth}
+          >
+            {isLoginMode ? 'Login' : 'Register'}
+          </button>
+          <button
+            className="w-full text-blue-500 underline"
+            onClick={() => {
+              setIsLoginMode(!isLoginMode);
+              setError('');
+            }}
+          >
+            {isLoginMode ? "Don't have an account? Register" : 'Already have an account? Login'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const filteredPatents = mockPatents.filter(
     (patent) =>
@@ -54,23 +136,49 @@ const PatentPortfolioTool = () => {
         <h1 className="text-2xl font-bold text-blue-800 flex items-center">
           <Shield className="mr-3 text-blue-600" /> Aerospace Patent Portfolio
         </h1>
-        <div className="flex space-x-2">
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center">
-            <TrendingUp className="mr-2" /> Insights
-          </button>
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center">
-            <FileText className="mr-2" /> Generate Claim Chart
-          </button>
+        <div className="flex space-x-2 items-center">
+          <span>Welcome, {currentUser.username}!</span>
           <button
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center"
-            onClick={() => setShowPatentLog(true)}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            onClick={() => setCurrentUser(null)}
           >
-            <List className="mr-2" /> Patent Log
+            Logout
           </button>
         </div>
       </header>
 
-      {/* Search and Filters */}
+      <div className="flex justify-between mb-4">
+        <button
+          className="bg-transparent text-gray-500 px-4 py-2 rounded hover:bg-gray-100 flex items-center"
+          onClick={handleGeneratePatent} // Calls handleGeneratePatent to generate a patent
+        >
+          <FileText className="mr-2" /> Generate Patent
+        </button>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+          onClick={() => setShowPatentLog(!showPatentLog)}
+        >
+          <List className="mr-2" /> Patent Log
+        </button>
+      </div>
+
+      {showPatentLog && (
+        <div className="bg-gray-100 p-4 rounded mb-4">
+          <h3 className="font-bold mb-2">Uploaded Patents:</h3>
+          {uploadedPatents.length > 0 ? (
+            <ul className="list-disc list-inside">
+              {uploadedPatents.map((patent) => (
+                <li key={patent.id}>
+                  {patent.title} - {patent.filingDate}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No patents uploaded yet.</p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-100 p-4 rounded">
           <h3 className="font-semibold mb-2 flex items-center">
@@ -118,122 +226,47 @@ const PatentPortfolioTool = () => {
 
         <div className="bg-gray-100 p-4 rounded">
           <h3 className="font-semibold mb-2 flex items-center">
-            <TrendingUp className="mr-2 text-blue-600" /> Relevance Score
+            <TrendingUp className="mr-2 text-blue-600" /> Relevance Filter
           </h3>
           <input
-            type="range"
-            min="0"
-            max="100"
-            className="w-full"
+            type="number"
+            placeholder="Min Relevance"
+            className="w-full p-2 border rounded"
             value={filters.minRelevance}
             onChange={(e) =>
-              setFilters({ ...filters, minRelevance: Number(e.target.value) })
+              setFilters({ ...filters, minRelevance: e.target.value })
             }
           />
-          <div className="text-center">Min Relevance: {filters.minRelevance}</div>
         </div>
       </div>
 
-      {/* Patent List */}
-      <div className="bg-white shadow rounded">
-        <table className="w-full">
-          <thead className="bg-blue-50">
+      <div>
+        <h3 className="font-semibold text-xl mb-4">Patent List</h3>
+        <table className="min-w-full border-collapse table-auto">
+          <thead>
             <tr>
-              <th className="p-3 text-left">Patent ID</th>
-              <th className="p-3 text-left">Title</th>
-              <th className="p-3 text-left">Company</th>
-              <th className="p-3 text-left">Filing Date</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Relevance</th>
+              <th className="border px-4 py-2">Patent ID</th>
+              <th className="border px-4 py-2">Title</th>
+              <th className="border px-4 py-2">Company</th>
+              <th className="border px-4 py-2">Filing Date</th>
+              <th className="border px-4 py-2">Status</th>
+              <th className="border px-4 py-2">Relevance</th>
             </tr>
           </thead>
           <tbody>
             {filteredPatents.map((patent) => (
-              <tr
-                key={patent.id}
-                className="hover:bg-blue-100 cursor-pointer"
-                onClick={() => setSelectedPatent(patent)}
-              >
-                <td className="p-3">{patent.id}</td>
-                <td className="p-3">{patent.title}</td>
-                <td className="p-3">{patent.company}</td>
-                <td className="p-3">{patent.filingDate}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      patent.status === 'Active'
-                        ? 'bg-green-200 text-green-800'
-                        : 'bg-yellow-200 text-yellow-800'
-                    }`}
-                  >
-                    {patent.status}
-                  </span>
-                </td>
-                <td className="p-3">{patent.relevanceScore}%</td>
+              <tr key={patent.id}>
+                <td className="border px-4 py-2">{patent.id}</td>
+                <td className="border px-4 py-2">{patent.title}</td>
+                <td className="border px-4 py-2">{patent.company}</td>
+                <td className="border px-4 py-2">{patent.filingDate}</td>
+                <td className="border px-4 py-2">{patent.status}</td>
+                <td className="border px-4 py-2">{patent.relevanceScore}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {/* Patent Details Modal */}
-      {selectedPatent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Patent Details</h2>
-            <p>
-              <strong>ID:</strong> {selectedPatent.id}
-            </p>
-            <p>
-              <strong>Title:</strong> {selectedPatent.title}
-            </p>
-            <p>
-              <strong>Company:</strong> {selectedPatent.company}
-            </p>
-            <p>
-              <strong>Filing Date:</strong> {selectedPatent.filingDate}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedPatent.status}
-            </p>
-            <p>
-              <strong>Relevance Score:</strong> {selectedPatent.relevanceScore}%
-            </p>
-            <button
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              onClick={() => setSelectedPatent(null)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Patent Log Modal */}
-      {showPatentLog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Uploaded Patents</h2>
-            {uploadedPatents.length > 0 ? (
-              <ul className="space-y-2">
-                {uploadedPatents.map((patent, index) => (
-                  <li key={index} className="p-2 border rounded">
-                    {patent}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No patents uploaded yet.</p>
-            )}
-            <button
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              onClick={() => setShowPatentLog(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
