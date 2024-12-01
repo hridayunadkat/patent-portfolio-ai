@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Filter, FileText, TrendingUp, Shield, List, User } from 'lucide-react';
+import { Search, Filter, FileText, TrendingUp, Shield, List } from 'lucide-react';
 
-// Mock data for aerospace patent search
 const mockPatents = [
   {
     id: 'A001',
@@ -30,11 +29,11 @@ const mockPatents = [
 ];
 
 const PatentPortfolioTool = () => {
-  const [users, setUsers] = useState([]); // Store user data
-  const [currentUser, setCurrentUser] = useState(null); // Track logged-in user
-  const [authForm, setAuthForm] = useState({ username: '', password: '' }); // Form inputs
-  const [isLoginMode, setIsLoginMode] = useState(true); // Switch between login/register modes
-  const [error, setError] = useState(''); // Display authentication errors
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authForm, setAuthForm] = useState({ username: '', password: '' });
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [error, setError] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -42,14 +41,20 @@ const PatentPortfolioTool = () => {
     companyFilter: '',
     minRelevance: 0,
   });
-  const [uploadedPatents, setUploadedPatents] = useState([]); // Store uploaded patents in Patent Log
+  const [uploadedPatents, setUploadedPatents] = useState([]);
   const [showPatentLog, setShowPatentLog] = useState(false);
+
+  const [showPopup, setShowPopup] = useState(false); // Popup visibility
+  const [newPatent, setNewPatent] = useState({
+    title: '',
+    company: '',
+    filingDate: '',
+    description: '',
+  });
 
   const handleAuth = () => {
     const { username, password } = authForm;
-
     if (isLoginMode) {
-      // Login logic
       const user = users.find((u) => u.username === username && u.password === password);
       if (user) {
         setCurrentUser(user);
@@ -58,29 +63,65 @@ const PatentPortfolioTool = () => {
         setError('Invalid username or password.');
       }
     } else {
-      // Register logic
       if (users.find((u) => u.username === username)) {
         setError('Username already exists.');
       } else {
         setUsers([...users, { username, password }]);
         setError('');
-        setIsLoginMode(true); // Switch to login mode after registration
+        setIsLoginMode(true);
       }
     }
   };
 
-  // Modified handleGeneratePatent to only add the patent to the Patent Log
   const handleGeneratePatent = () => {
-    const newPatent = {
+    setShowPopup(true); // Open popup
+  };
+
+  const handlePopupSubmit = () => {
+    if (!newPatent.title || !newPatent.company || !newPatent.filingDate || !newPatent.description) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const newPatentEntry = {
       id: `U${uploadedPatents.length + 1}`,
-      title: `User Generated Patent ${uploadedPatents.length + 1}`,
-      company: currentUser.username,
-      filingDate: new Date().toISOString().split('T')[0],
+      title: newPatent.title,
+      company: newPatent.company,
+      filingDate: newPatent.filingDate,
       status: 'Pending',
       relevanceScore: Math.floor(Math.random() * 100),
     };
-    setUploadedPatents([...uploadedPatents, newPatent]); // Add to Patent Log only
+
+    setUploadedPatents([...uploadedPatents, newPatentEntry]);
+    setNewPatent({ title: '', company: '', filingDate: '', description: '' }); // Reset form
+    setShowPopup(false); // Close popup
   };
+
+  const handlePopupClose = () => {
+    setNewPatent({ title: '', company: '', filingDate: '', description: '' });
+    setShowPopup(false);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Active':
+        return 'bg-green-500';
+      case 'Pending':
+        return 'bg-yellow-500';
+      case 'Inactive':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const filteredPatents = mockPatents.filter(
+    (patent) =>
+      patent.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (filters.activeOnly ? patent.status === 'Active' : true) &&
+      (filters.companyFilter ? patent.company.includes(filters.companyFilter) : true) &&
+      patent.relevanceScore >= filters.minRelevance
+  );
 
   if (!currentUser) {
     return (
@@ -122,174 +163,138 @@ const PatentPortfolioTool = () => {
     );
   }
 
-  const filteredPatents = mockPatents.filter(
-    (patent) =>
-      patent.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filters.activeOnly ? patent.status === 'Active' : true) &&
-      (filters.companyFilter ? patent.company.includes(filters.companyFilter) : true) &&
-      patent.relevanceScore >= filters.minRelevance
-  );
-
-  // Function to get status color for bubble
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Active':
-        return 'bg-green-500';
-      case 'Pending':
-        return 'bg-yellow-500';
-      case 'Inactive':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-blue-800 flex items-center">
-          <Shield className="mr-3 text-blue-600" /> Aerospace Patent Portfolio
-        </h1>
-        <div className="flex space-x-2 items-center">
-          <span>Welcome, {currentUser.username}!</span>
+    <div>
+      <div className={`${showPopup ? 'blur-md' : ''} max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl`}>
+        <header className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-blue-800 flex items-center">
+            <Shield className="mr-3 text-blue-600" /> Aerospace Patent Portfolio
+          </h1>
+          <div className="flex space-x-2 items-center">
+            <span>Welcome, {currentUser.username}!</span>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              onClick={() => setCurrentUser(null)}
+            >
+              Logout
+            </button>
+          </div>
+        </header>
+
+        <div className="flex justify-between mb-4">
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            onClick={() => setCurrentUser(null)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+            onClick={handleGeneratePatent}
           >
-            Logout
+            <FileText className="mr-2" /> Generate Patent
+          </button>
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+            onClick={() => setShowPatentLog(!showPatentLog)}
+          >
+            <List className="mr-2" /> Patent Log
           </button>
         </div>
-      </header>
 
-      <div className="flex justify-between mb-4">
-        <button
-          className="bg-transparent text-gray-500 px-4 py-2 rounded hover:bg-gray-100 flex items-center"
-          onClick={handleGeneratePatent} // Calls handleGeneratePatent to generate a patent
-        >
-          <FileText className="mr-2" /> Generate Patent
-        </button>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-          onClick={() => setShowPatentLog(!showPatentLog)}
-        >
-          <List className="mr-2" /> Patent Log
-        </button>
+        {showPatentLog && (
+          <div className="bg-gray-100 p-4 rounded mb-4">
+            <h3 className="font-bold mb-2">Uploaded Patents:</h3>
+            {uploadedPatents.length > 0 ? (
+              <ul className="list-disc list-inside">
+                {uploadedPatents.map((patent) => (
+                  <li key={patent.id}>
+                    {patent.title} - {patent.filingDate}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No patents uploaded yet.</p>
+            )}
+          </div>
+        )}
+
+        <table className="min-w-full table-auto border-collapse">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 text-left">Patent ID</th>
+              <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Company</th>
+              <th className="px-4 py-2 text-left">Filing Date</th>
+              <th className="px-4 py-2 text-left">Status</th>
+              <th className="px-4 py-2 text-left">Relevance Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPatents.map((patent) => (
+              <tr key={patent.id}>
+                <td className="border px-4 py-2">{patent.id}</td>
+                <td className="border px-4 py-2">{patent.title}</td>
+                <td className="border px-4 py-2">{patent.company}</td>
+                <td className="border px-4 py-2">{patent.filingDate}</td>
+                <td className="border px-4 py-2">
+                  <span
+                    className={`text-white rounded-full text-sm ${getStatusColor(patent.status)}`}
+                  >
+                    {patent.status}
+                  </span>
+                </td>
+                <td className="border px-4 py-2">{patent.relevanceScore}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {showPatentLog && (
-        <div className="bg-gray-100 p-4 rounded mb-4">
-          <h3 className="font-bold mb-2">Uploaded Patents:</h3>
-          {uploadedPatents.length > 0 ? (
-            <ul className="list-disc list-inside">
-              {uploadedPatents.map((patent) => (
-                <li key={patent.id}>
-                  {patent.title} - {patent.filingDate}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No patents uploaded yet.</p>
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-100 p-4 rounded">
-          <h3 className="font-semibold mb-2 flex items-center">
-            <Search className="mr-2 text-blue-600" /> Patent Search
-          </h3>
-          <input
-            type="text"
-            placeholder="Search aerospace patents..."
-            className="w-full p-2 border rounded"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="bg-gray-100 p-4 rounded">
-          <h3 className="font-semibold mb-2 flex items-center">
-            <Filter className="mr-2 text-blue-600" /> Filters
-          </h3>
-          <div className="space-y-2">
-            <select
-              className="w-full p-2 border rounded"
-              value={filters.companyFilter}
-              onChange={(e) =>
-                setFilters({ ...filters, companyFilter: e.target.value })
-              }
-            >
-              <option value="">All Companies</option>
-              <option value="AeroDynamics">AeroDynamics Corp.</option>
-              <option value="SpaceInnovations">SpaceInnovations Inc.</option>
-              <option value="AstroMaterials">AstroMaterials Ltd.</option>
-            </select>
-            <div className="flex items-center">
+      {/* Popup Form */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-4">Add New Patent</h2>
+            <div className="space-y-4">
               <input
-                type="checkbox"
-                className="mr-2"
-                checked={filters.activeOnly}
-                onChange={(e) =>
-                  setFilters({ ...filters, activeOnly: e.target.checked })
-                }
+                type="text"
+                placeholder="Title"
+                className="w-full p-2 border rounded"
+                value={newPatent.title}
+                onChange={(e) => setNewPatent({ ...newPatent, title: e.target.value })}
               />
-              <label>Active Patents Only</label>
+              <input
+                type="text"
+                placeholder="Company"
+                className="w-full p-2 border rounded"
+                value={newPatent.company}
+                onChange={(e) => setNewPatent({ ...newPatent, company: e.target.value })}
+              />
+              <input
+                type="date"
+                className="w-full p-2 border rounded"
+                value={newPatent.filingDate}
+                onChange={(e) => setNewPatent({ ...newPatent, filingDate: e.target.value })}
+              />
+              <textarea
+                placeholder="Description"
+                className="w-full p-2 border rounded"
+                value={newPatent.description}
+                onChange={(e) => setNewPatent({ ...newPatent, description: e.target.value })}
+              />
+              <div className="flex justify-between">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={handlePopupSubmit}
+                >
+                  Submit
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  onClick={handlePopupClose}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="bg-gray-100 p-4 rounded">
-          <h3 className="font-semibold mb-2 flex items-center">
-            <TrendingUp className="mr-2 text-blue-600" /> Relevance Filter
-          </h3>
-          <div className="flex items-center">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={filters.minRelevance}
-              onChange={(e) =>
-                setFilters({ ...filters, minRelevance: parseInt(e.target.value) })
-              }
-              className="w-full"
-            />
-            <span className="ml-2">{filters.minRelevance}%</span>
-          </div>
-        </div>
-      </div>
-
-      <table className="min-w-full table-auto border-collapse">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Patent ID</th>
-            <th className="px-4 py-2 text-left">Title</th>
-            <th className="px-4 py-2 text-left">Company</th>
-            <th className="px-4 py-2 text-left">Filing Date</th>
-            <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-left">Relevance Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredPatents.map((patent) => (
-            <tr key={patent.id}>
-              <td className="border px-4 py-2">{patent.id}</td>
-              <td className="border px-4 py-2">{patent.title}</td>
-              <td className="border px-4 py-2">{patent.company}</td>
-              <td className="border px-4 py-2">{patent.filingDate}</td>
-              <td className="border px-4 py-2">
-                <span
-                  className={`inline-block px-3 py-1 text-white rounded-full ${
-                    getStatusColor(patent.status)
-                  }`}
-                >
-                  {patent.status}
-                </span>
-              </td>
-              <td className="border px-4 py-2">{patent.relevanceScore}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      )}
     </div>
   );
 };
