@@ -52,6 +52,8 @@ const PatentPortfolioTool = () => {
     description: '',
   });
 
+  const [editingPatent, setEditingPatent] = useState(null); // Patent being edited
+
   const handleAuth = () => {
     const { username, password } = authForm;
     if (isLoginMode) {
@@ -75,6 +77,7 @@ const PatentPortfolioTool = () => {
 
   const handleGeneratePatent = () => {
     setShowPopup(true); // Open popup
+    setEditingPatent(null); // Reset editing
   };
 
   const handlePopupSubmit = () => {
@@ -99,7 +102,29 @@ const PatentPortfolioTool = () => {
 
   const handlePopupClose = () => {
     setNewPatent({ title: '', company: '', filingDate: '', description: '' });
+    setEditingPatent(null); // Reset editing
     setShowPopup(false);
+  };
+
+  const handlePatentEdit = (patent) => {
+    setEditingPatent(patent); // Set the patent to be edited
+    setNewPatent({ ...patent }); // Set form fields to current patent data
+    setShowPopup(true); // Open popup
+  };
+
+  const handlePopupUpdate = () => {
+    if (!newPatent.title || !newPatent.company || !newPatent.filingDate || !newPatent.description) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const updatedPatents = uploadedPatents.map((patent) =>
+      patent.id === editingPatent.id ? { ...patent, ...newPatent } : patent
+    );
+    setUploadedPatents(updatedPatents);
+    setEditingPatent(null); // Clear editing state
+    setNewPatent({ title: '', company: '', filingDate: '', description: '' }); // Reset form
+    setShowPopup(false); // Close popup
   };
 
   const getStatusColor = (status) => {
@@ -204,6 +229,12 @@ const PatentPortfolioTool = () => {
                 {uploadedPatents.map((patent) => (
                   <li key={patent.id}>
                     {patent.title} - {patent.filingDate}
+                    <button
+                      className="ml-2 text-blue-500"
+                      onClick={() => handlePatentEdit(patent)}
+                    >
+                      Edit
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -249,7 +280,9 @@ const PatentPortfolioTool = () => {
       {showPopup && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4">Add New Patent</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {editingPatent ? 'Edit Patent' : 'Add New Patent'}
+            </h2>
             <div className="space-y-4">
               <input
                 type="text"
@@ -280,9 +313,9 @@ const PatentPortfolioTool = () => {
               <div className="flex justify-between">
                 <button
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  onClick={handlePopupSubmit}
+                  onClick={editingPatent ? handlePopupUpdate : handlePopupSubmit}
                 >
-                  Submit
+                  {editingPatent ? 'Update' : 'Submit'}
                 </button>
                 <button
                   className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
